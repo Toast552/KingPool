@@ -1,0 +1,46 @@
+const axios = require('axios');
+
+// Set up the product search parameters
+const productName = "Shoes";
+const maxPrice = 500;
+const minRating = 4.0;
+
+// Send a GET request to the shopping website's API to retrieve the search results
+const apiUrl = "https://www.example.com/api/products/search";
+const params = { name: productName, max_price: maxPrice, min_rating: minRating };
+
+axios.get(apiUrl, { params })
+  .then((response) => {
+    const searchResults = response.data;
+    const products = searchResults.products;
+
+    // Select the best product based on rating and price
+    let bestProduct = null;
+    for (let i = 0; i < products.length; i++) {
+      const product = products[i];
+      if (!bestProduct || product.rating > bestProduct.rating) {
+        if (product.price <= maxPrice) {
+          bestProduct = product;
+        }
+      }
+    }
+
+    // If a product was found, add it to the shopping cart
+    if (bestProduct) {
+      const cartUrl = "https://www.example.com/cart/add";
+      const payload = { product_id: bestProduct.id, quantity: 1 };
+
+      axios.post(cartUrl, payload)
+        .then((response) => {
+          console.log(`Successfully added ${bestProduct.name} to the cart!`);
+        })
+        .catch((error) => {
+          console.error(`Failed to add ${bestProduct.name} to the cart.`);
+        });
+    } else {
+      console.log("No suitable products found for the search criteria.");
+    }
+  })
+  .catch((error) => {
+    console.error("Failed to retrieve product search results:", error);
+  });
