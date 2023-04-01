@@ -3,6 +3,7 @@ from ibapi.wrapper import EWrapper
 from ibapi.contract import Contract
 from ibapi.order import Order
 from ibapi.common import BarData
+import time
 
 class MyWrapper(EWrapper):
     def __init__(self):
@@ -27,19 +28,23 @@ class MyClient(EClient):
     def __init__(self, wrapper):
         EClient.__init__(self, wrapper)
 
-    def createContract(self, symbol, secType, exchange, currency):
+    def createContract(self, symbol, secType, exchange, currency, expiry="", strike=0, right=""):
         contract = Contract()
         contract.symbol = symbol
         contract.secType = secType
         contract.exchange = exchange
         contract.currency = currency
+        contract.lastTradeDateOrContractMonth = expiry
+        contract.strike = strike
+        contract.right = right
         return contract
 
-    def createOrder(self, action, quantity, orderType):
+    def createOrder(self, action, quantity, orderType, price):
         order = Order()
         order.action = action
         order.orderType = orderType
         order.totalQuantity = quantity
+        order.lmtPrice = price
         return order
 
     def placeOrder(self, orderId, contract, order):
@@ -56,22 +61,8 @@ def main():
     client = MyClient(wrapper)
     client.connect("127.0.0.1", 7497, 0)
 
-    # Create the contract for the security being traded
-    contract = client.createContract("AAPL", "STK", "SMART", "USD")
+    # Create the contract for the option being traded
+    contract = client.createContract("AAPL", "OPT", "SMART", "USD", "20230303", 145, "CALL")
 
-    # Request historical data for AAPL
-    client.reqHistoricalData(1, contract, "", "1 D", "5 mins", "TRADES", 0, 1, False, [])
-
-    # Wait for the historical data to be received
-    while len(wrapper.historicalData) == 0:
-        time.sleep(1)
-
-    # Print the historical data
-    for bar in wrapper.historicalData:
-        print(bar)
-
-    # Disconnect from the TWS API
-    client.disconnect()
-
-if __name__ == "__main__":
-    main()
+    # Request historical data for the option
+    client.reqHistorical
